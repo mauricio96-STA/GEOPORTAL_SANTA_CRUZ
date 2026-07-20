@@ -3,8 +3,8 @@
    ============================================ */
 
 // --- Supabase Config ---
-const SUPABASE_URL = 'https://jnkmojmksaraxhkthliq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impua21vam1rc2FyYXhoa3RobGlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5ODg3NDMsImV4cCI6MjA5NzU2NDc0M30.Xvj9crSS-crZXK2_47YAo4RP5loILWJ5DpRZ4NmRfWc';
+const SUPABASE_URL = '{{SUPABASE_URL}}';
+const SUPABASE_KEY = '{{SUPABASE_KEY}}';
 const REST = SUPABASE_URL + '/rest/v1';
 
 // --- Capas Config ---
