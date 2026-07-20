@@ -41,6 +41,11 @@
                         </button>
                     </div>
                 </div>
+                <div class="panel-section">
+                    <button class="btn-generate-pdf" onclick="generarPDF()" title="Generar reporte PDF de los reportes ciudadanos">
+                        <i class="fas fa-file-pdf"></i> Generar PDF Reportes
+                    </button>
+                </div>
                 <div class="panel-status">
                     <i class="fas fa-database"></i>
                     <span class="count" id="total_features">0</span> features
@@ -158,6 +163,8 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="app.js"></script>
 
 </body>

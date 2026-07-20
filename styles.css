@@ -127,7 +127,21 @@ body{
     display:flex;align-items:center;gap:5px;flex-shrink:0;
 }
 .panel-status .count{font-weight:700;color:#667eea;}
-.status-bar .count{font-weight:700;color:#667eea;}
+
+/* --- Botón PDF --- */
+.btn-generate-pdf{
+    width:100%;padding:10px;border-radius:8px;border:none;
+    background:linear-gradient(135deg,#c62828,#e53935);
+    color:white;font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+    transition:all .25s;box-shadow:0 2px 8px rgba(198,40,40,0.3);
+}
+.btn-generate-pdf:hover{
+    background:linear-gradient(135deg,#b71c1c,#c62828);
+    box-shadow:0 4px 12px rgba(198,40,40,0.4);transform:translateY(-1px);
+}
+.btn-generate-pdf:active{transform:translateY(0);}
+.btn-generate-pdf i{font-size:14px;}
 
 /* --- Map Container --- */
 .map-container{flex:1;position:relative;}

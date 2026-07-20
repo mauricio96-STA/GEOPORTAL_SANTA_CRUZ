@@ -281,6 +281,122 @@ function toggleLayer(idx) {
     }
 }
 
+// --- PDF Generation ---
+async function generarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'letter');
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFillColor(15, 12, 41);
+    doc.rect(0, 0, pageWidth, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Geoportal Santa Cruz', 15, 15);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Reporte de Reportes Ciudadanos', 15, 22);
+    doc.setFontSize(8);
+    doc.text('Fecha: ' + new Date().toLocaleDateString('es-EC', { year:'numeric', month:'long', day:'numeric' }), 15, 28);
+
+    // Fetch reports
+    let reportes = [];
+    try {
+        const res = await fetch(`${REST}/reportes_ciudadanos?select=*&order=fecha_reporte.desc&limit=5000`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        });
+        reportes = await res.json();
+    } catch (e) {
+        console.error('Error al obtener reportes:', e);
+    }
+
+    if (reportes.length === 0) {
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(12);
+        doc.text('No hay reportes registrados.', pageWidth / 2, 50, { align: 'center' });
+        doc.save('reportes_santa_cruz.pdf');
+        return;
+    }
+
+    // Summary by type
+    const summary = {};
+    reportes.forEach(r => {
+        const tipo = r.tipo_problema || 'Otro';
+        summary[tipo] = (summary[tipo] || 0) + 1;
+    });
+
+    let y = 40;
+    doc.setTextColor(26, 26, 46);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Resumen por Tipo', 15, y);
+    y += 8;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    for (const [tipo, count] of Object.entries(summary)) {
+        doc.setFillColor(245, 245, 248);
+        doc.roundedRect(15, y - 4, pageWidth - 30, 7, 1, 1, 'F');
+        doc.setTextColor(26, 26, 46);
+        doc.text(tipo, 20, y);
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(count), pageWidth - 20, y, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        y += 9;
+    }
+
+    y += 5;
+    doc.setDrawColor(200, 200, 210);
+    doc.line(15, y, pageWidth - 15, y);
+    y += 8;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Detalle de Reportes (' + reportes.length + ' total)', 15, y);
+    y += 3;
+
+    // Table
+    const rows = reportes.map((r, i) => [
+        String(i + 1),
+        r.tipo_problema || 'Otro',
+        (r.descripcion || '').substring(0, 60),
+        r.autor || 'Anónimo',
+        r.fecha_reporte ? new Date(r.fecha_reporte).toLocaleDateString('es-EC') : '-',
+        r.estado || 'Pendiente'
+    ]);
+
+    doc.autoTable({
+        startY: y,
+        margin: { left: 15, right: 15 },
+        head: [['#', 'Tipo', 'Descripción', 'Autor', 'Fecha', 'Estado']],
+        body: rows,
+        styles: { fontSize: 7.5, cellPadding: 2, overflow: 'linebreak', font: 'helvetica' },
+        headStyles: { fillColor: [15, 12, 41], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 248, 252] },
+        columnStyles: {
+            0: { cellWidth: 8 },
+            1: { cellWidth: 30 },
+            2: { cellWidth: 55 },
+            3: { cellWidth: 25 },
+            4: { cellWidth: 22 },
+            5: { cellWidth: 20 }
+        },
+        didDrawPage: function (data) {
+            // Footer on each page
+            doc.setFontSize(7);
+            doc.setTextColor(150);
+            doc.text(
+                'Geoportal Santa Cruz - Reportes Ciudadanos | Página ' + doc.internal.getNumberOfPages(),
+                pageWidth / 2, doc.internal.pageSize.getHeight() - 8,
+                { align: 'center' }
+            );
+        }
+    });
+
+    doc.save('reportes_santa_cruz.pdf');
+}
+
 // --- Legend ---
 function toggleLegend() {
     document.getElementById('legend_body').classList.toggle('open');
