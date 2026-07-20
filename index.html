@@ -23,42 +23,31 @@
     <!-- Main Content -->
     <div class="main">
 
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-layer-group"></i> Capas
-            </div>
-
-            <!-- Search -->
-            <div class="search-box">
-                <div class="search-wrapper">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="search_layers" placeholder="Buscar capa..." oninput="filtrarCapas()">
+        <!-- Panel Lateral -->
+        <aside class="side-panel" id="side_panel">
+            <div class="panel-content">
+                <div class="panel-header">
+                    <i class="fas fa-layer-group"></i> Capas
+                </div>
+                <div class="panel-layers" id="layers_list"></div>
+                <div class="panel-section">
+                    <div class="panel-section-title"><i class="fas fa-map"></i> Mapa Base</div>
+                    <div class="basemap-row">
+                        <button class="basemap-pill active" data-type="osm" onclick="switchBasemap('osm')">
+                            <i class="fas fa-map"></i> Calles
+                        </button>
+                        <button class="basemap-pill" data-type="satellite" onclick="switchBasemap('satellite')">
+                            <i class="fas fa-satellite"></i> Satélite
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-status">
+                    <i class="fas fa-database"></i>
+                    <span class="count" id="total_features">0</span> features
                 </div>
             </div>
-
-            <!-- Layer List -->
-            <div id="layers_list"></div>
-
-            <!-- Basemap Selector -->
-            <div class="basemap-section">
-                <div class="basemap-label">Mapa Base</div>
-                <div class="basemap-options">
-                    <button class="basemap-btn active" data-type="osm" onclick="switchBasemap('osm')">
-                        <i class="fas fa-map"></i>
-                        <span>Calles</span>
-                    </button>
-                    <button class="basemap-btn" data-type="satellite" onclick="switchBasemap('satellite')">
-                        <i class="fas fa-satellite"></i>
-                        <span>Satélite</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Status -->
-            <div class="status-bar">
-                <i class="fas fa-database"></i>
-                <span class="count" id="total_features">0</span> features
+            <div class="panel-toggle-btn" onclick="togglePanel()">
+                <i class="fas fa-chevron-left"></i>
             </div>
         </aside>
 

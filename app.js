@@ -204,7 +204,7 @@ function switchBasemap(type) {
 
     currentBasemap = type;
 
-    document.querySelectorAll('.basemap-btn').forEach(btn => {
+    document.querySelectorAll('.basemap-pill').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.type === type);
     });
 }
@@ -245,22 +245,25 @@ function buildPopupHTML(cfg, props) {
         </div>`;
 }
 
+// --- Panel Toggle ---
+function togglePanel() {
+    document.getElementById('side_panel').classList.toggle('collapsed');
+}
+
 // --- Sidebar ---
 function buildSidebar() {
     const container = document.getElementById('layers_list');
     container.innerHTML = LAYERS_CONFIG.map((cfg, i) => `
-        <div class="layer-group" data-name="${cfg.name.toLowerCase()}">
-            <div class="layer-item">
-                <div class="layer-color" style="background:${cfg.color}"></div>
-                <div class="layer-info">
-                    <div class="layer-name">
-                        <i class="fas ${cfg.icon || 'fa-layer-group'}" style="color:${cfg.color}"></i>
-                        ${cfg.name}
-                    </div>
-                    <div class="layer-desc">${cfg.description}</div>
+        <div class="panel-layer" data-name="${cfg.name.toLowerCase()}">
+            <div class="layer-bar" style="background:${cfg.color}"></div>
+            <div class="layer-data">
+                <div class="layer-title">
+                    <i class="fas ${cfg.icon || 'fa-layer-group'}" style="color:${cfg.color}"></i>
+                    ${cfg.name}
                 </div>
-                <div class="layer-toggle active" id="toggle_${i}" onclick="toggleLayer(${i})"></div>
+                <div class="layer-sub">${cfg.description}</div>
             </div>
+            <div class="layer-toggle active" id="toggle_${i}" onclick="toggleLayer(${i})"></div>
         </div>
     `).join('');
 }
@@ -276,13 +279,6 @@ function toggleLayer(idx) {
         toggle.classList.add('active');
         if (layersData[idx]) map.addLayer(layersData[idx]);
     }
-}
-
-function filtrarCapas() {
-    const q = document.getElementById('search_layers').value.toLowerCase();
-    document.querySelectorAll('.layer-group').forEach(el => {
-        el.style.display = el.dataset.name.includes(q) ? '' : 'none';
-    });
 }
 
 // --- Legend ---
