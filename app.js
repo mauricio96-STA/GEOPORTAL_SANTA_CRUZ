@@ -787,11 +787,9 @@ function rptObtenerUbicacion() {
             map.setView([lat, lng], 17);
         },
         function (err) {
-            latD.value = '';
-            lngD.value = '';
-            latD.placeholder = 'Clic en mapa';
-            lngD.placeholder = 'Clic en mapa';
-            console.warn('Geolocation error:', err.message);
+            const center = map.getCenter();
+            rptSetUbicacion(center.lat, center.lng);
+            showToast('GPS no disponible. Se usó la ubicación del mapa. Puedes clickear para ajustar.');
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
