@@ -172,6 +172,21 @@ const map = L.map('map', {
 
 L.control.zoom({ position: 'topright' }).addTo(map);
 
+// --- Measure Control ---
+L.control.measure({
+    position: 'topright',
+    primaryLengthUnit: 'meters',
+    secondaryLengthUnit: 'kilometers',
+    primaryAreaUnit: 'sqmeters',
+    secondaryAreaUnit: 'hectares',
+    activeColor: '#667eea',
+    completedColor: '#764ba2',
+    localization: 'es',
+    captureZ: true,
+    decPoint: ',',
+    thousandsSep: '.'
+}).addTo(map);
+
 // --- Basemaps ---
 const basemapOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
