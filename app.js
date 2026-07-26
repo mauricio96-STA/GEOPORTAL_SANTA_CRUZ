@@ -10,6 +10,26 @@ const REST = SUPABASE_URL + '/rest/v1';
 // --- Capas Config ---
 const LAYERS_CONFIG = [
     {
+        name: 'Manzanas',
+        table: 'manzanas zona urbana - santa cruz',
+        geomField: 'geom',
+        geomType: 'MULTIPOLYGON',
+        color: '#2e7d32',
+        icon: 'fa-th-large',
+        description: 'Manzanas de la zona urbana',
+        popupFields: {
+            'clave_cata': 'Clave Catastral',
+            'nombre': 'Nombre',
+            'codigo_man': 'Código Manzana',
+            'tipo_catas': 'Tipo Catastral',
+            'shape_area': 'Área (m²)',
+            'shape_leng': 'Perímetro (m)',
+            'codigo_pro': 'Código Provincia',
+            'codigo_can': 'Código Cantón',
+            'codigo_par': 'Código Parroquia'
+        }
+    },
+    {
         name: 'Zona Urbana',
         table: 'zona urbana - santa cruz',
         geomField: 'geom',
@@ -42,26 +62,6 @@ const LAYERS_CONFIG = [
             'text': 'Texto',
             'entityhand': 'Tipo Entidad',
             'linetype': 'Tipo Línea'
-        }
-    },
-    {
-        name: 'Manzanas',
-        table: 'manzanas zona urbana - santa cruz',
-        geomField: 'geom',
-        geomType: 'MULTIPOLYGON',
-        color: '#2e7d32',
-        icon: 'fa-th-large',
-        description: 'Manzanas de la zona urbana',
-        popupFields: {
-            'clave_cata': 'Clave Catastral',
-            'nombre': 'Nombre',
-            'codigo_man': 'Código Manzana',
-            'tipo_catas': 'Tipo Catastral',
-            'shape_area': 'Área (m²)',
-            'shape_leng': 'Perímetro (m)',
-            'codigo_pro': 'Código Provincia',
-            'codigo_can': 'Código Cantón',
-            'codigo_par': 'Código Parroquia'
         }
     },
     {
@@ -187,9 +187,11 @@ function startMeasure(type) {
     document.getElementById('btn_area').classList.toggle('active', type === 'area');
     document.getElementById('btn_cancel_measure').style.display = 'flex';
 
-    map.getContainer().style.cursor = 'crosshair';
-    map.on('click', onMeasureClick);
-    map.on('dblclick', onMeasureDblClick);
+    const overlay = document.getElementById('measure_overlay');
+    overlay.style.display = 'block';
+    overlay.addEventListener('click', onOverlayClick);
+    overlay.addEventListener('dblclick', onOverlayDblClick);
+
     map.doubleClickZoom.disable();
 
     showToast(type === 'distance' ? 'Modo distancia activo: clic para agregar puntos, doble clic para finalizar' : 'Modo área activo: clic para agregar puntos, doble clic para finalizar', 'info');
@@ -203,17 +205,21 @@ function cancelMeasure() {
     document.getElementById('btn_area').classList.remove('active');
     document.getElementById('btn_cancel_measure').style.display = 'none';
 
-    map.getContainer().style.cursor = '';
-    map.off('click', onMeasureClick);
-    map.off('dblclick', onMeasureDblClick);
+    const overlay = document.getElementById('measure_overlay');
+    overlay.style.display = 'none';
+    overlay.removeEventListener('click', onOverlayClick);
+    overlay.removeEventListener('dblclick', onOverlayDblClick);
+
     map.doubleClickZoom.enable();
 
     if (measureLayer) { map.removeLayer(measureLayer); measureLayer = null; }
     if (measureTooltip) { measureTooltip.remove(); measureTooltip = null; }
 }
 
-function onMeasureClick(e) {
-    measurePoints.push(e.latlng);
+function onOverlayClick(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const latlng = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+    measurePoints.push(latlng);
 
     if (measureLayer) map.removeLayer(measureLayer);
 
@@ -238,8 +244,9 @@ function onMeasureClick(e) {
     updateMeasureTooltip();
 }
 
-function onMeasureDblClick(e) {
-    L.DomEvent.stop(e);
+function onOverlayDblClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
     if (measurePoints.length < 2) return;
 
     const result = calculateMeasure();
@@ -256,9 +263,11 @@ function onMeasureDblClick(e) {
         .setContent(popupContent)
         .openOn(map);
 
-    map.off('click', onMeasureClick);
-    map.off('dblclick', onMeasureDblClick);
-    map.getContainer().style.cursor = '';
+    const overlay = document.getElementById('measure_overlay');
+    overlay.style.display = 'none';
+    overlay.removeEventListener('click', onOverlayClick);
+    overlay.removeEventListener('dblclick', onOverlayDblClick);
+
     map.doubleClickZoom.enable();
 
     document.getElementById('btn_distance').classList.remove('active');
