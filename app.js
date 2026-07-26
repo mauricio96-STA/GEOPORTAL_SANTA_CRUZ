@@ -225,18 +225,18 @@ function onOverlayClick(e) {
 
     if (measureMode === 'distance') {
         measureLayer = L.polyline(measurePoints, {
-            color: '#667eea', weight: 3, dashArray: '8 6',
+            color: '#c62828', weight: 3, dashArray: '8 6',
             className: 'measure-line'
         }).addTo(map);
     } else {
         if (measurePoints.length >= 3) {
             measureLayer = L.polygon(measurePoints, {
-                color: '#764ba2', weight: 2, fillColor: '#764ba2',
+                color: '#c62828', weight: 2, fillColor: '#c62828',
                 fillOpacity: 0.15, dashArray: '6 4'
             }).addTo(map);
         } else {
             measureLayer = L.polyline(measurePoints, {
-                color: '#764ba2', weight: 2, dashArray: '8 6'
+                color: '#c62828', weight: 2, dashArray: '8 6'
             }).addTo(map);
         }
     }
@@ -254,8 +254,8 @@ function onOverlayDblClick(e) {
     if (measureTooltip) measureTooltip.remove();
 
     const popupContent = measureMode === 'distance'
-        ? `<div style="font-weight:700;font-size:13px;color:#667eea;">${result.text}</div>`
-        : `<div style="font-weight:700;font-size:13px;color:#764ba2;">${result.text}</div>`;
+        ? `<div style="font-weight:700;font-size:13px;color:#c62828;">${result.text}</div>`
+        : `<div style="font-weight:700;font-size:13px;color:#c62828;">${result.text}</div>`;
 
     const lastPoint = measurePoints[measurePoints.length - 1];
     measureTooltip = L.popup({ closeButton: true, className: 'measure-result-popup', offset: [0, -10] })
