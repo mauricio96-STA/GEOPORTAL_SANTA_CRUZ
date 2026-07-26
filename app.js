@@ -333,7 +333,7 @@ function formatArea(m2) {
     return (m2 / 10000).toFixed(2) + ' ha';
 }
 
-function showToast(msg, type) {
+function showToast(msg, isError = false) {
     let toast = document.getElementById('measure_toast');
     if (!toast) {
         toast = document.createElement('div');
@@ -347,7 +347,12 @@ function showToast(msg, type) {
         `;
         document.body.appendChild(toast);
     }
-    const icon = type === 'info' ? 'fa-ruler' : 'fa-check-circle';
+    if (isError) {
+        toast.style.background = 'linear-gradient(135deg,#b71c1c,#c62828)';
+    } else {
+        toast.style.background = 'linear-gradient(135deg,#0f0c29,#302b63)';
+    }
+    const icon = isError ? 'fa-exclamation-circle' : 'fa-check-circle';
     toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
     toast.style.opacity = '1';
     clearTimeout(toast._timeout);
@@ -873,6 +878,7 @@ async function enviarReporte() {
                 telefono: telefono,
                 latitud: lat,
                 longitud: lng,
+                geom: `SRID=4326;POINT(${lng} ${lat})`,
                 estado: 'Pendiente'
             })
         });
@@ -918,15 +924,6 @@ function resetModalForm() {
     const btn = document.getElementById('rpt_btnEnviar');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Reporte';
-}
-
-function showToast(msg, isError = false) {
-    const toast = document.getElementById('toast');
-    const icon = toast.querySelector('i');
-    document.getElementById('toast_msg').textContent = msg;
-    toast.className = 'toast show' + (isError ? ' error' : '');
-    icon.className = isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
-    setTimeout(() => toast.className = 'toast', 3500);
 }
 
 async function recargarCapaReportes() {
