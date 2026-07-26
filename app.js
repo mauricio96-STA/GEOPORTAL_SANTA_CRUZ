@@ -172,20 +172,178 @@ const map = L.map('map', {
 
 L.control.zoom({ position: 'topright' }).addTo(map);
 
-// --- Measure Control ---
-L.control.measure({
-    position: 'topright',
-    primaryLengthUnit: 'meters',
-    secondaryLengthUnit: 'kilometers',
-    primaryAreaUnit: 'sqmeters',
-    secondaryAreaUnit: 'hectares',
-    activeColor: '#667eea',
-    completedColor: '#764ba2',
-    localization: 'es',
-    captureZ: true,
-    decPoint: ',',
-    thousandsSep: '.'
-}).addTo(map);
+// --- Measurement Tool ---
+let measureMode = null;
+let measurePoints = [];
+let measureLayer = null;
+let measureTooltip = null;
+
+function startMeasure(type) {
+    cancelMeasure();
+    measureMode = type;
+    measurePoints = [];
+
+    document.getElementById('btn_distance').classList.toggle('active', type === 'distance');
+    document.getElementById('btn_area').classList.toggle('active', type === 'area');
+    document.getElementById('btn_cancel_measure').style.display = 'flex';
+
+    map.getContainer().style.cursor = 'crosshair';
+    map.on('click', onMeasureClick);
+    map.on('dblclick', onMeasureDblClick);
+    map.doubleClickZoom.disable();
+
+    showToast(type === 'distance' ? 'Modo distancia activo: clic para agregar puntos, doble clic para finalizar' : 'Modo área activo: clic para agregar puntos, doble clic para finalizar', 'info');
+}
+
+function cancelMeasure() {
+    measureMode = null;
+    measurePoints = [];
+
+    document.getElementById('btn_distance').classList.remove('active');
+    document.getElementById('btn_area').classList.remove('active');
+    document.getElementById('btn_cancel_measure').style.display = 'none';
+
+    map.getContainer().style.cursor = '';
+    map.off('click', onMeasureClick);
+    map.off('dblclick', onMeasureDblClick);
+    map.doubleClickZoom.enable();
+
+    if (measureLayer) { map.removeLayer(measureLayer); measureLayer = null; }
+    if (measureTooltip) { measureTooltip.remove(); measureTooltip = null; }
+}
+
+function onMeasureClick(e) {
+    measurePoints.push(e.latlng);
+
+    if (measureLayer) map.removeLayer(measureLayer);
+
+    if (measureMode === 'distance') {
+        measureLayer = L.polyline(measurePoints, {
+            color: '#667eea', weight: 3, dashArray: '8 6',
+            className: 'measure-line'
+        }).addTo(map);
+    } else {
+        if (measurePoints.length >= 3) {
+            measureLayer = L.polygon(measurePoints, {
+                color: '#764ba2', weight: 2, fillColor: '#764ba2',
+                fillOpacity: 0.15, dashArray: '6 4'
+            }).addTo(map);
+        } else {
+            measureLayer = L.polyline(measurePoints, {
+                color: '#764ba2', weight: 2, dashArray: '8 6'
+            }).addTo(map);
+        }
+    }
+
+    updateMeasureTooltip();
+}
+
+function onMeasureDblClick(e) {
+    L.DomEvent.stop(e);
+    if (measurePoints.length < 2) return;
+
+    const result = calculateMeasure();
+
+    if (measureTooltip) measureTooltip.remove();
+
+    const popupContent = measureMode === 'distance'
+        ? `<div style="font-weight:700;font-size:13px;color:#667eea;">${result.text}</div>`
+        : `<div style="font-weight:700;font-size:13px;color:#764ba2;">${result.text}</div>`;
+
+    const lastPoint = measurePoints[measurePoints.length - 1];
+    measureTooltip = L.popup({ closeButton: true, className: 'measure-result-popup', offset: [0, -10] })
+        .setLatLng(lastPoint)
+        .setContent(popupContent)
+        .openOn(map);
+
+    map.off('click', onMeasureClick);
+    map.off('dblclick', onMeasureDblClick);
+    map.getContainer().style.cursor = '';
+    map.doubleClickZoom.enable();
+
+    document.getElementById('btn_distance').classList.remove('active');
+    document.getElementById('btn_area').classList.remove('active');
+    document.getElementById('btn_cancel_measure').style.display = 'none';
+    measureMode = null;
+}
+
+function updateMeasureTooltip() {
+    if (measurePoints.length < 1) return;
+
+    const result = calculateMeasure();
+    const lastPoint = measurePoints[measurePoints.length - 1];
+
+    if (measureTooltip) measureTooltip.remove();
+
+    const content = measurePoints.length === 1
+        ? '<span style="opacity:0.7;">Click para agregar más puntos</span>'
+        : `<span>${result.text}</span>`;
+
+    measureTooltip = L.tooltip({
+        permanent: true, direction: 'top', offset: [0, -12],
+        className: 'measure-tooltip'
+    }).setLatLng(lastPoint).setContent(content).addTo(map);
+}
+
+function calculateMeasure() {
+    if (measureMode === 'distance') {
+        let total = 0;
+        for (let i = 1; i < measurePoints.length; i++) {
+            total += measurePoints[i - 1].distanceTo(measurePoints[i]);
+        }
+        return { length: total, text: formatDistance(total) };
+    } else {
+        let length = 0;
+        for (let i = 1; i < measurePoints.length; i++) {
+            length += measurePoints[i - 1].distanceTo(measurePoints[i]);
+        }
+        const area = calculatePolygonArea();
+        return { length, area, text: formatArea(area) };
+    }
+}
+
+function calculatePolygonArea() {
+    if (measurePoints.length < 3) return 0;
+    let area = 0;
+    const n = measurePoints.length;
+    for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        area += measurePoints[i].lng * measurePoints[j].lat;
+        area -= measurePoints[j].lng * measurePoints[i].lat;
+    }
+    return Math.abs(area / 2) * 111319.9 * 111319.9 * Math.cos(measurePoints[0].lat * Math.PI / 180);
+}
+
+function formatDistance(m) {
+    if (m < 1000) return m.toFixed(1) + ' m';
+    return (m / 1000).toFixed(2) + ' km';
+}
+
+function formatArea(m2) {
+    if (m2 < 10000) return m2.toFixed(1) + ' m²';
+    return (m2 / 10000).toFixed(2) + ' ha';
+}
+
+function showToast(msg, type) {
+    let toast = document.getElementById('measure_toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'measure_toast';
+        toast.style.cssText = `
+            position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+            background:linear-gradient(135deg,#0f0c29,#302b63);color:white;
+            padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;
+            box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:10001;
+            transition:opacity .3s;display:flex;align-items:center;gap:8px;
+        `;
+        document.body.appendChild(toast);
+    }
+    const icon = type === 'info' ? 'fa-ruler' : 'fa-check-circle';
+    toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+    toast.style.opacity = '1';
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => { toast.style.opacity = '0'; }, 4000);
+}
 
 // --- Basemaps ---
 const basemapOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
