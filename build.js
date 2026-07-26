@@ -3,18 +3,27 @@ const path = require('path');
 
 const distDir = path.join(__dirname, 'dist');
 
-// Crear directorio dist
 if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir, { recursive: true });
 }
 
-// Archivos a procesar
 const files = ['index.html', 'app.js', 'styles.css'];
 
-// Variables de entorno
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_KEY || '';
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('⚠️  ERROR: SUPABASE_URL y SUPABASE_KEY no están definidas.');
+    console.error('   Configúralas en Vercel → Settings → Environment Variables');
+    process.exit(1);
+}
+
+console.log(`🔑 SUPABASE_URL: ${supabaseUrl.substring(0, 30)}...`);
+console.log(`🔑 SUPABASE_KEY: ${supabaseKey.substring(0, 20)}...`);
+
 const vars = {
-    '{{SUPABASE_URL}}': process.env.SUPABASE_URL || '',
-    '{{SUPABASE_KEY}}': process.env.SUPABASE_KEY || ''
+    '{{SUPABASE_URL}}': supabaseUrl,
+    '{{SUPABASE_KEY}}': supabaseKey
 };
 
 files.forEach(file => {

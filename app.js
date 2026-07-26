@@ -876,12 +876,16 @@ async function enviarReporte() {
                 telefono: telefono,
                 latitud: lat,
                 longitud: lng,
-                geom: `SRID=4326;POINT(${lng} ${lat})`,
+                geom: { type: 'Point', coordinates: [lng, lat] },
                 estado: 'Pendiente'
             })
         });
 
-        if (!res.ok) throw new Error('Error al guardar');
+        if (!res.ok) {
+            const errBody = await res.text();
+            console.error('Supabase error:', res.status, errBody);
+            throw new Error(`Error ${res.status}: ${errBody}`);
+        }
 
         showToast('Reporte enviado correctamente');
         resetModalForm();
